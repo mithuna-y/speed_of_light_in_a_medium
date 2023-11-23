@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Constants
-material_y_width = 20
+material_y_width = 200
 material_x_z_width = 10
 number_of_electrons_wide = 3
-number_of_layers = 4
+number_of_layers = 10
 number_of_y_points = number_of_layers * 40
 TIME_END = 200
 TIME_STEPS = 500
@@ -14,17 +14,17 @@ c = 6  # speed of light
 hookes_constant = 1
 mass_electron = 1
 damping_constant = 1
-sigma = 0.8
+sigma = 2
 resonant_angular_frequency = np.sqrt(hookes_constant/mass_electron)
 angular_frequency = resonant_angular_frequency * 0.5
 
 # Define electric field function
 def original_electric_field(t, y, angular_frequency):
-    return plane_wave(t, y, angular_frequency)
+    return gaussian(t, y)
 
 
 def gaussian(t, y):
-    coefficient = 5.0 / (sigma * np.sqrt(2 * np.pi))
+    coefficient = 10 / (sigma * np.sqrt(2 * np.pi))
     exponential_term = np.exp(-0.5 * ((y + c * t - material_y_width/4) / sigma) ** 2)
     return coefficient * exponential_term
 
@@ -105,7 +105,7 @@ for step in range(TIME_STEPS):
             if (x_p_val, y_p_val, z_p_val) == (0, layer_y_position(layer, number_of_layers), 0):
                 accel_history[layer, step] = force(ef_combined, z_middle_of_layer, layer, z_velocity_middle_of_layer) / mass_electron
 
-        #ax.quiver(x_p_val, y_p_val, z_p_val, 0, 0, ef_combined, color='m', alpha=1)
+        ax.quiver(x_p_val, y_p_val, z_p_val, 0, 0, ef_combined, color='m', alpha=1)
         ax.quiver(x_p_val, y_p_val, z_p_val, 0, 0, ef_original, color='r', alpha=0.2)
         ax.quiver(x_p_val, y_p_val, z_p_val, 0, 0, ef_due_to_electrons * 5, color='b', alpha=0.2)
 
@@ -117,7 +117,8 @@ for step in range(TIME_STEPS):
 
         for x in x_e:
             for z in z_e:
-                ax.scatter(x, y_e[layer], z_middle_of_layer[layer] + z, c='b', alpha=0.5)
+                #ax.scatter(x, y_e[layer], z_middle_of_layer[layer] + z, c='b', alpha=0.5)
+                pass
 
     ax.set_xlim([-material_x_z_width, material_x_z_width])
     ax.set_ylim([-material_y_width, material_y_width / 2])
