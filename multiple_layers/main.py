@@ -5,20 +5,20 @@ import numpy as np
 material_y_width = 200
 material_x_z_width = 10
 number_of_electrons_wide = 7  # please make odd, thank you
-number_of_layers = 2
+number_of_layers = 10
 charge_electron = 1 / number_of_electrons_wide ** 2  # this is to ensure the amount of charge per layer is constant
 TIME_END = 200
-TIME_STEPS = 100
+TIME_STEPS = 200
 DT = TIME_END / TIME_STEPS
 start_y = material_y_width * 1 / 8  # this is where we will start plotting y from
-number_of_evaluation_points = 20  # make this larger for more resolution in the y axis
+number_of_evaluation_points = 60  # make this larger for more resolution in the y axis
 c = 6  # speed of light
 hookes_constant = 0.1
 mass_electron = 1
-damping_constant = 0
+damping_constant = 1
 sigma = 10
 resonant_angular_frequency = np.sqrt(hookes_constant / mass_electron)
-angular_frequency = resonant_angular_frequency * 0.9
+angular_frequency = resonant_angular_frequency * 1.5
 
 
 # Define electric field function
@@ -34,7 +34,6 @@ def gaussian(t, y):
 
 
 def plane_wave(t, y, angular_frequency):
-    #return 10 * np.exp(1j * (angular_frequency * (t + y / c)))
     return 10 * np.cos((angular_frequency * (t + y / c)))
 
 # The electric field at a point p due to an electron at position x_e, y_e, z_e, t_e.
@@ -84,24 +83,6 @@ def set_electron_xz_positions(material_x_z_width, number_of_electrons_wide):
     return x_e, z_e
 
 
-electron_y_positions = set_electron_y_positions(material_y_width, number_of_layers)
-electron_x_positions, electron_z_positions = set_electron_xz_positions(material_x_z_width, number_of_electrons_wide)
-electron_positions = [(x, y, z) for x in electron_x_positions for y in electron_y_positions for z in
-                      electron_z_positions]
-
-# We are only going to evaluate the field along the line x = 0, z = 0. These are the y values for those points
-y_f = np.linspace(-material_y_width, start_y, number_of_evaluation_points)
-
-z_middle_of_layer = np.zeros_like(electron_y_positions)
-z_velocity_middle_of_layer = np.zeros_like(z_middle_of_layer)
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.view_init(elev=0, azim=0)
-
-plt.ion()
-
-accel_history = np.zeros((number_of_layers, TIME_STEPS))
 
 # total electric field due to all electrons in the past on a point (0, y, 0) at time_step
 def electrons_electric_field(time_step, y):
@@ -119,45 +100,65 @@ def electrons_electric_field(time_step, y):
             ef_due_to_electrons += contribution
     return ef_due_to_electrons
 
+if __name__ == '__main__':
+    electron_y_positions = set_electron_y_positions(material_y_width, number_of_layers)
+    electron_x_positions, electron_z_positions = set_electron_xz_positions(material_x_z_width, number_of_electrons_wide)
+    electron_positions = [(x, y, z) for x in electron_x_positions for y in electron_y_positions for z in
+                          electron_z_positions]
 
-for step in range(TIME_STEPS):
-    ax.cla()
-    t = step * DT
+    # We are only going to evaluate the field along the line x = 0, z = 0. These are the y values for those points
+    y_f = np.linspace(-material_y_width, start_y, number_of_evaluation_points)
 
-    # We are going to calculate the field along the line x = 0, z = 0 and plot it
-    for y_point in y_f:
-        ef_original = original_electric_field(t, y_point)
-        ef_due_to_electrons = electrons_electric_field(step, y_point)
-        ef_combined = ef_original + ef_due_to_electrons
+    # These keep track of the z displacement, velocity and acceleration of the electrons for all previous times.
+    # Initialised to contain 0s
+    # We assume all electrons in the slice have the same values for these for simplicity
+    z_middle_of_layer = np.zeros_like(electron_y_positions)
+    z_velocity_middle_of_layer = np.zeros_like(z_middle_of_layer)
+    accel_history = np.zeros((number_of_layers, TIME_STEPS))
 
-        ax.quiver(0, y_point, 0, 0, 0, ef_combined, color='m', alpha=1)
-        ax.quiver(0, y_point, 0, 0, 0, ef_original, color='g', alpha=0.1)
-        ax.quiver(0, y_point, 0, 0, 0, ef_due_to_electrons * 5, color='b', alpha=0.2)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.view_init(elev=0, azim=0)
 
-    # Now we update the z position and velocity of all our electrons.
-    for layer, layer_y in np.ndenumerate(electron_y_positions):
-        # To simplify, we will assume that each layer experiences the same electric field: the ef at (0, layer_y, 0)
-        ef_on_layer = electrons_electric_field(step, layer_y) + original_electric_field(t, layer_y)
+    plt.ion()
 
-        # calculate the acceleration of the middle point of each layer and append the value to accel_history
-        accel_history[layer, step] = force(ef_on_layer, z_middle_of_layer[layer],
-                                           z_velocity_middle_of_layer[layer]) / mass_electron
+    for step in range(TIME_STEPS):
+        ax.cla()
+        t = step * DT
 
-        z_middle_of_layer[layer] += z_velocity_middle_of_layer[layer] * DT + 0.5 * accel_history[layer, step] * DT ** 2
-        z_velocity_middle_of_layer[layer] += accel_history[layer, step] * DT
+        # We are going to calculate the field along the line x = 0, z = 0 and plot it
+        for y_point in y_f:
+            ef_original = original_electric_field(t, y_point)
+            ef_due_to_electrons = electrons_electric_field(step, y_point)
+            ef_combined = ef_original + ef_due_to_electrons
 
+            ax.quiver(0, y_point, 0, 0, 0, ef_combined, color='m', alpha=0.3)
+            ax.quiver(0, y_point, 0, 0, 0, ef_original, color='g', alpha=0.1)
+            #ax.quiver(0, y_point, 0, 0, 0, ef_due_to_electrons * 5, color='b', alpha=0.2)
 
-        ax.scatter(electron_x_positions, layer_y, z_middle_of_layer[layer] + electron_z_positions, c='b', alpha=0.5)
+        # Now we update the z position and velocity of all our electrons.
+        for layer, layer_y in np.ndenumerate(electron_y_positions):
+            # To simplify, we will assume that each layer experiences the same electric field: the ef at (0, layer_y, 0)
+            ef_on_layer = electrons_electric_field(step, layer_y) + original_electric_field(t, layer_y)
 
-    ax.set_xlim([-material_x_z_width, material_x_z_width])
-    ax.set_ylim([-material_y_width, start_y])
-    ax.set_zlim([-material_x_z_width, material_x_z_width])
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
+            # calculate the acceleration of the middle point of each layer and append the value to accel_history
+            accel_history[layer, step] = force(ef_on_layer, z_middle_of_layer[layer],
+                                               z_velocity_middle_of_layer[layer]) / mass_electron
 
-    plt.draw()
-    plt.pause(0.01)
+            z_middle_of_layer[layer] += z_velocity_middle_of_layer[layer] * DT + 0.5 * accel_history[layer, step] * DT ** 2
+            z_velocity_middle_of_layer[layer] += accel_history[layer, step] * DT
 
-    if not plt.get_fignums():
-        break
+            #ax.scatter(electron_x_positions, layer_y, z_middle_of_layer[layer] + electron_z_positions, c='b', alpha=0.5)
+
+        ax.set_xlim([-material_x_z_width, material_x_z_width])
+        ax.set_ylim([-material_y_width, start_y])
+        ax.set_zlim([-material_x_z_width, material_x_z_width])
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        plt.draw()
+        plt.pause(0.01)
+
+        if not plt.get_fignums():
+            break
