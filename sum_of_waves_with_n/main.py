@@ -14,28 +14,7 @@ material_constant = 50
 resonant_frequency = 4
 resonant_angular_frequency = 2 * np.pi * resonant_frequency
 
-# Central frequency of the Gaussian.
-f0 = 2
-main_angular_frequency = 2 * np.pi * f0
-
-# Width of the Gaussian.
-sigma = 0.32
-
-c = 20  # Speed of light
-c_reduced = c/ (1 + material_constant * ((resonant_angular_frequency**2 + main_angular_frequency**2)/(resonant_angular_frequency**2 - main_angular_frequency**2)**2)) # Reduced speed of light for the green dot
-c_phase = c/(1 + material_constant / (resonant_angular_frequency**2 - main_angular_frequency**2))
-green_starts = medium_start / c  # Time at which the green dot starts moving
-alpha = 0.5  # Transparency of individual waves
-
-
-
-# Frequencies for the cosine waves.
-# frequencies = np.linspace(0, 2*f0, 500)  # We take 500 frequencies linearly spaced between 0 and 2*f0.
-#
-# # Weights for the cosine waves - Gaussian wave packet.
-# weights = 1/100 * np.exp(-0.5 * ((frequencies - f0) / sigma) ** 2)
-# angular_frequencies = [2 * np.pi * f for f in frequencies]  # Angular frequencies
-
+c = 20 # Speed of light
 
 def fourier_weights(f, angular_frequencies, T, num_points=1000):
     """
@@ -66,7 +45,8 @@ def fourier_weights(f, angular_frequencies, T, num_points=1000):
     return weights
 
 
-# normal
+# normal distribution
+sigma = 0.32
 mu = 0
 normal_distribution = lambda x: (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x-mu) / sigma) ** 2)
 f0 = 1.0
@@ -74,6 +54,23 @@ frequencies = np.linspace(0, 2 * f0, 500)
 angular_frequencies = [2 * np.pi * f for f in frequencies]
 #T = 2 * np.pi / (2 * np.pi * f0)  # One period for the highest frequency
 weights = fourier_weights(normal_distribution, angular_frequencies, T)
+
+# or Gaussian wave packet
+# Central frequency of the Gaussian.
+#f0 = 2
+#frequencies = np.linspace(0, 2*f0, 500)  # We take 500 frequencies linearly spaced between 0 and 2*f0.
+#
+# # Weights for the cosine waves - Gaussian wave packet.
+#weights = 1/50 * np.exp(-0.5 * ((frequencies - f0) / sigma) ** 2)
+#angular_frequencies = [2 * np.pi * f for f in frequencies]  # Angular frequencies
+
+
+main_angular_frequency = 2 * np.pi * f0
+c_reduced = c/ (1 + material_constant * ((resonant_angular_frequency**2 + main_angular_frequency**2)/(resonant_angular_frequency**2 - main_angular_frequency**2)**2)) # Reduced speed of light for the green dot
+c_phase = c/(1 + material_constant / (resonant_angular_frequency**2 - main_angular_frequency**2))
+green_starts = medium_start / c  # Time at which the green dot starts moving
+alpha = 0.5  # Transparency of individual waves
+
 
 # Create x and t arrays
 x = np.linspace(0, L, 1000)
@@ -146,7 +143,7 @@ def update(frame):
     if frame >= green_starts:
         green_dot.set_data((frame-green_starts)*c_reduced + medium_start, 1)
         blue_dot.set_data((frame - green_starts) * c_phase + medium_start, 1)
-    return [vacuum_sum_line, medium_sum_line, continued_vacuum_line, red_dot, green_dot, blue_dot]
+    return [vacuum_sum_line, medium_sum_line, continued_vacuum_line, red_dot, blue_dot]
 
 # Create the animation
 ani = FuncAnimation(fig, update, frames=t, init_func=init, blit=True, interval=10, repeat=True)

@@ -2,39 +2,39 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Constants
-material_y_width = 200
+material_y_width = 100
 material_x_z_width = 10
-number_of_electrons_wide = 7  # please make odd, thank you
-number_of_layers = 10
+number_of_electrons_wide = 5
+number_of_layers = 7
 charge_electron = 1 / number_of_electrons_wide ** 2  # this is to ensure the amount of charge per layer is constant
-TIME_END = 200
-TIME_STEPS = 200
+TIME_END = 100
+TIME_STEPS = 100
 DT = TIME_END / TIME_STEPS
-start_y = material_y_width * 1 / 8  # this is where we will start plotting y from
-number_of_evaluation_points = 60  # make this larger for more resolution in the y axis
-c = 6  # speed of light
+start_y = 25 # this is where we will start plotting y from
+number_of_evaluation_points = 100  # make this larger for more resolution in the y axis
+c = 5  # speed of light
 hookes_constant = 0.1
 mass_electron = 1
-damping_constant = 1
-sigma = 10
+damping_constant = 0
+sigma = 5
 resonant_angular_frequency = np.sqrt(hookes_constant / mass_electron)
-angular_frequency = resonant_angular_frequency * 1.5
+angular_frequency = resonant_angular_frequency * 0.99
 
 
 # Define electric field function
 def original_electric_field(t, y):
-    return plane_wave(t, y, angular_frequency)
-    #return gaussian(t, y)
+    #return plane_wave(t, y, angular_frequency)
+    return gaussian(t, y)
 
 
 def gaussian(t, y):
-    coefficient = 100 / (sigma * np.sqrt(2 * np.pi))
+    coefficient = 50 / (sigma * np.sqrt(2 * np.pi))
     exponential_term = np.exp(-0.5 * ((y + c * t - material_y_width / 4) / sigma) ** 2)
     return coefficient * exponential_term
 
 
 def plane_wave(t, y, angular_frequency):
-    return 10 * np.cos((angular_frequency * (t + y / c)))
+    return 2 * np.cos((angular_frequency * (t + y / c)))
 
 # The electric field at a point p due to an electron at position x_e, y_e, z_e, t_e.
 def electron_field_contribution(x_e, y_e, z_e, t_e, x_p, y_p, z_p, t_p, accel_hist):
@@ -132,9 +132,13 @@ if __name__ == '__main__':
             ef_due_to_electrons = electrons_electric_field(step, y_point)
             ef_combined = ef_original + ef_due_to_electrons
 
-            ax.quiver(0, y_point, 0, 0, 0, ef_combined, color='m', alpha=0.3)
-            ax.quiver(0, y_point, 0, 0, 0, ef_original, color='g', alpha=0.1)
+            #ax.quiver(0, y_point, 0, 0, 0, ef_combined, color='m', alpha=0.3)
+            #ax.quiver(0, y_point, 0, 0, 0, ef_original, color='g', alpha=0.1)
             #ax.quiver(0, y_point, 0, 0, 0, ef_due_to_electrons * 5, color='b', alpha=0.2)
+
+            ax.scatter([0], [y_point], [ef_combined], color='m', alpha=1, s=1)
+            ax.scatter([0], [y_point], [ef_original], color='r', alpha=1, s=1)
+            ax.scatter([0], [y_point], [ef_due_to_electrons], color='b', alpha=1, s=1)
 
         # Now we update the z position and velocity of all our electrons.
         for layer, layer_y in np.ndenumerate(electron_y_positions):
@@ -145,10 +149,10 @@ if __name__ == '__main__':
             accel_history[layer, step] = force(ef_on_layer, z_middle_of_layer[layer],
                                                z_velocity_middle_of_layer[layer]) / mass_electron
 
-            z_middle_of_layer[layer] += z_velocity_middle_of_layer[layer] * DT + 0.5 * accel_history[layer, step] * DT ** 2
-            z_velocity_middle_of_layer[layer] += accel_history[layer, step] * DT
+            z_middle_of_layer[layer] += z_velocity_middle_of_layer[layer] * DT + 0.5 * accel_history[layer, step][0] * DT ** 2
+            z_velocity_middle_of_layer[layer] += accel_history[layer, step][0] * DT
 
-            #ax.scatter(electron_x_positions, layer_y, z_middle_of_layer[layer] + electron_z_positions, c='b', alpha=0.5)
+            ax.scatter(electron_x_positions, layer_y, z_middle_of_layer[layer] + electron_z_positions, c='b', alpha=0.5)
 
         ax.set_xlim([-material_x_z_width, material_x_z_width])
         ax.set_ylim([-material_y_width, start_y])
