@@ -33,10 +33,9 @@ frequencies = [f0]
 weights = [1]
 
 # If instead you'd like to calculate it for a gaussian then comment out the above and use this instead:
-# Width of the Gaussian.
-# sigma = 0.32
-# frequencies = np.linspace(0, 2*f0, 500)  # We take 500 frequencies linearly spaced between 0 and 2*f0.
-# weights = 1/100 * np.exp(-0.5 * ((frequencies - f0) / sigma) ** 2)  # Weights for the cosine waves Gaussian distribution.
+#sigma = 0.32  # Width of the Gaussian.
+#frequencies = np.linspace(0, 2*f0, 500)  # We take 500 frequencies linearly spaced between 0 and 2*f0.
+#weights = 1/100 * np.exp(-0.5 * ((frequencies - f0) / sigma) ** 2)  # Weights for the cosine waves Gaussian distribution.
 
 angular_frequencies = [2 * np.pi * f for f in frequencies]  # Angular frequencies
 
