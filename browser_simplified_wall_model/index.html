@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplified Wall Model - Browser Physics Simulation</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="container">
+        <div id="controls">
+            <h2>Physics Controls</h2>
+            <div class="control-group">
+                <label for="playPause">Animation:</label>
+                <button id="playPause">Pause</button>
+                <button id="cleanup" style="margin-left: 10px;">Cleanup</button>
+            </div>
+            <div class="control-group">
+                <label for="speed">Speed:</label>
+                <input type="range" id="speed" min="0.1" max="5" step="0.1" value="1">
+                <span id="speedValue">1.0x</span>
+            </div>
+            <div class="control-group">
+                <label for="time">Time:</label>
+                <span id="timeDisplay">0.00s</span>
+            </div>
+            <div class="control-group">
+                <label for="fieldStrength">Field Strength:</label>
+                <input type="range" id="fieldStrength" min="0.1" max="2" step="0.1" value="1">
+                <span id="fieldValue">1.0</span>
+            </div>
+            <div class="control-group">
+                <label for="showOriginal">Show Original Field:</label>
+                <input type="checkbox" id="showOriginal" checked>
+            </div>
+            <div class="control-group">
+                <label for="showElectron">Show Electron Field:</label>
+                <input type="checkbox" id="showElectron" checked>
+            </div>
+            <div class="control-group">
+                <label>Field Values:</label>
+                <div id="fieldValues" style="font-size: 0.8em; color: #ccc;">
+                    Original: <span id="originalValue">0.000</span><br>
+                    Electron: <span id="electronValue">0.000</span><br>
+                    Combined: <span id="combinedValue">0.000</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Performance:</label>
+                <div id="performance" style="font-size: 0.8em; color: #ccc;">
+                    FPS: <span id="fpsValue">60</span><br>
+                    Memory: <span id="memoryValue">0MB</span>
+                </div>
+            </div>
+        </div>
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Our simulation scripts -->
+    <script src="js/physics.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
